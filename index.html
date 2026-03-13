@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Hausmeister Prüflisten</title>
+<meta name="theme-color" content="#0f1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" id="pwa-manifest">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0f1117;--surface:#181c27;--surface2:#1e2235;--border:#2a2f45;--pri:#818cf8;--pri-dim:#3730a3;--txt:#e8eaf0;--txt2:#8892a4;--ok:#34d399;--err:#f87171;--warn:#fbbf24;--radius:14px}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;max-width:540px;margin:0 auto;font-size:15px}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:15px 18px;position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:12px}
+.hdr-back{width:36px;height:36px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;display:none;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.hdr-back.show{display:flex}
+.hdr-logo{width:36px;height:36px;background:var(--pri-dim);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hdr-text h1{font-size:16px;font-weight:800;letter-spacing:-.3px}
+.hdr-text p{font-size:11px;color:var(--txt2);margin-top:1px}
+.tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:68px;z-index:99}
+.tab{flex:1;padding:13px 8px;text-align:center;font-size:13px;font-weight:600;color:var(--txt2);cursor:pointer;border-bottom:2px solid transparent;transition:.2s;display:flex;align-items:center;justify-content:center;gap:7px}
+.tab.active{color:var(--pri);border-bottom-color:var(--pri)}
+.content{padding:16px}
+.screen{display:none}.screen.active{display:block}
+.module-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:12px;cursor:pointer;display:flex;align-items:center;gap:16px;transition:.18s;-webkit-tap-highlight-color:transparent}
+.module-card:active{transform:scale(.98);border-color:var(--pri)}
+.module-icon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.module-card h2{font-size:15px;font-weight:700;margin-bottom:3px}
+.module-card p{font-size:12px;color:var(--txt2);line-height:1.4}
+.module-arrow{margin-left:auto;color:var(--txt2);flex-shrink:0}
+.badge{display:inline-block;background:var(--pri-dim);color:var(--pri);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;margin-top:5px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.card-title{font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:1px;margin-bottom:13px;display:flex;align-items:center;gap:7px}
+.field-label{display:block;font-size:13px;font-weight:600;color:var(--txt2);margin-bottom:6px}
+input[type=date],input[type=text],input[type=month],textarea{width:100%;padding:13px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-family:'Inter',sans-serif;font-weight:500;color:var(--txt);background:var(--surface2);-webkit-appearance:none;transition:.2s}
+textarea{resize:vertical;min-height:90px;line-height:1.5}
+input:focus,textarea:focus{outline:none;border-color:var(--pri)}
+.time-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+input[type=time]{width:100%;padding:13px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-family:'Inter',sans-serif;font-weight:500;color:var(--txt);background:var(--surface2);-webkit-appearance:none;transition:.2s}
+input[type=time]:focus{outline:none;border-color:var(--pri)}
+.radio-group{display:flex;flex-direction:column;gap:8px}
+.radio-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid var(--border);border-radius:11px;cursor:pointer;background:var(--surface2);transition:.15s;-webkit-tap-highlight-color:transparent}
+.radio-item.on{border-color:var(--pri);background:rgba(129,140,248,.08)}
+.radio-dot{width:22px;height:22px;border:2px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.radio-item.on .radio-dot{border-color:var(--pri)}
+.radio-inner{width:11px;height:11px;border-radius:50%;background:var(--pri);display:none}
+.radio-item.on .radio-inner{display:block}
+.radio-lbl{font-size:15px;font-weight:500}
+.chk-group{display:flex;flex-direction:column;gap:8px}
+.chk-item{display:flex;align-items:center;gap:16px;padding:20px;border:1.5px solid var(--border);border-radius:13px;cursor:pointer;transition:.15s;user-select:none;-webkit-tap-highlight-color:transparent;background:var(--surface2)}
+.chk-item.on{border-color:var(--pri);background:rgba(129,140,248,.08)}
+.chk-box{width:30px;height:30px;border:2px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--surface)}
+.chk-item.on .chk-box{background:var(--pri);border-color:var(--pri)}
+.chk-check{display:none}.chk-item.on .chk-check{display:block}
+.chk-lbl{font-size:17px;font-weight:500;color:var(--txt)}
+.chk-ico{opacity:.5;flex-shrink:0}.chk-item.on .chk-ico{opacity:.9}
+.big-toggle{width:100%;padding:22px;border:1.5px solid var(--border);border-radius:13px;cursor:pointer;background:var(--surface2);display:flex;align-items:center;gap:16px;-webkit-tap-highlight-color:transparent;transition:.15s}
+.big-toggle.on{border-color:var(--ok);background:rgba(52,211,153,.07)}
+.big-toggle-box{width:32px;height:32px;border:2px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--surface)}
+.big-toggle.on .big-toggle-box{background:var(--ok);border-color:var(--ok)}
+.big-toggle-lbl{font-size:17px;font-weight:600}
+.btn{display:block;width:100%;padding:16px;border:none;border-radius:12px;font-size:15px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;transition:.15s;-webkit-tap-highlight-color:transparent}
+.btn:active{transform:scale(.97)}
+.btn-pri{background:var(--pri);color:#0f1117}
+.btn-sec{background:var(--surface2);color:var(--txt);border:1.5px solid var(--border);font-size:14px;padding:14px}
+.btn-danger{background:rgba(248,113,113,.1);color:var(--err);border:1.5px solid rgba(248,113,113,.25);padding:14px}
+.btn-sm{padding:8px 13px;font-size:12px;border-radius:8px;border:none;cursor:pointer;font-weight:600;font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:5px}
+.btn-edit{background:rgba(129,140,248,.12);color:var(--pri)}
+.btn-del{background:rgba(248,113,113,.1);color:var(--err)}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:13px 8px;text-align:center}
+.stat-n{font-size:22px;font-weight:800;color:var(--pri)}
+.stat-l{font-size:11px;color:var(--txt2);margin-top:3px;font-weight:500}
+.filter-row{display:flex;gap:8px;margin-bottom:12px}
+.filter-row select{flex:1;padding:12px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:'Inter',sans-serif;font-weight:500;background:var(--surface2);color:var(--txt)}
+.export-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.entry-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:15px;margin-bottom:10px}
+.entry-card.ok{border-left:3px solid var(--ok)}
+.entry-card.warn{border-left:3px solid var(--warn)}
+.entry-card.pri{border-left:3px solid var(--pri)}
+.e-date{font-size:11px;color:var(--txt2);margin-bottom:5px;font-weight:600}
+.e-title{font-size:14px;font-weight:700;margin-bottom:4px;color:var(--txt)}
+.e-sub{font-size:13px;color:var(--txt2)}
+.e-time{font-size:12px;color:var(--ok);font-weight:600;margin-top:6px}
+.e-actions{display:flex;gap:8px;margin-top:11px}
+.pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;margin-top:5px}
+.pill-ok{background:rgba(52,211,153,.15);color:var(--ok)}
+.pill-warn{background:rgba(251,191,36,.15);color:var(--warn)}
+.empty{text-align:center;padding:48px 20px;color:var(--txt2)}
+.empty-ico{margin-bottom:12px;opacity:.4}
+.empty p{font-size:14px;font-weight:500}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px)}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:22px 22px 0 0;padding:22px;width:100%;max-width:540px;max-height:88vh;overflow-y:auto}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.modal-hdr h2{font-size:16px;font-weight:800}
+.modal-close{width:32px;height:32px;background:var(--surface2);border:1px solid var(--border);border-radius:50%;cursor:pointer;color:var(--txt2);font-size:18px;display:flex;align-items:center;justify-content:center}
+.fg{margin-bottom:14px}
+.spacer{height:20px}
+.divider{height:1px;background:var(--border);margin:14px 0}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);background:var(--surface2);color:var(--txt);border:1px solid var(--border);padding:12px 22px;border-radius:12px;font-size:13px;font-weight:600;z-index:999;transition:transform .3s;white-space:nowrap;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-snow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/><line x1="19.07" y1="4.93" x2="4.93" y2="19.07"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></symbol>
+  <symbol id="i-salt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v8"/><path d="M12 10 L8 18"/><path d="M12 10 L16 18"/><path d="M4 18h16"/><path d="M7 22h10"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M3 9h6"/><path d="M3 15h6"/></symbol>
+  <symbol id="i-shop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></symbol>
+  <symbol id="i-museum" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M5 10V21"/><path d="M19 10V21"/><path d="M12 2L3 10h18L12 2z"/><path d="M9 21v-5h6v5"/></symbol>
+  <symbol id="i-school" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M12 2L2 7h20L12 2z"/><path d="M5 7v14"/><path d="M19 7v14"/><path d="M9 21v-6h6v6"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></symbol>
+  <symbol id="i-tool" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 6 5 9 10 3"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1" fill="currentColor"/><circle cx="3" cy="12" r="1" fill="currentColor"/><circle cx="3" cy="18" r="1" fill="currentColor"/></symbol>
+  <symbol id="i-pdf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></symbol>
+  <symbol id="i-tree" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-7"/><path d="M9 15l-5-5h4l-3-4h4L12 2l3 4h4l-3 4h4l-5 5"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+</svg>
+
+<header>
+  <div class="hdr-back" id="hdr-back" onclick="goHome()"><svg width="18" height="18"><use href="#i-back"/></svg></div>
+  <div class="hdr-logo" id="hdr-logo"><svg width="20" height="20" style="color:#818cf8"><use href="#i-home"/></svg></div>
+  <div class="hdr-text"><h1 id="hdr-title">Hausmeister Prüflisten</h1><p id="hdr-sub">Übersicht aller Module</p></div>
+</header>
+
+<!-- HOME -->
+<div id="screen-home" class="screen active content">
+  <div class="module-card" onclick="openModule('sb')">
+    <div class="module-icon" style="background:rgba(129,140,248,.15)"><svg width="26" height="26" style="color:#818cf8"><use href="#i-snow"/></svg></div>
+    <div><h2>Räum- &amp; Streubuch</h2><p>Winterdienst-Dokumentation</p><span class="badge" id="badge-sb">0 Einträge</span></div>
+    <svg class="module-arrow" width="18" height="18"><use href="#i-chevron"/></svg>
+  </div>
+  <div class="module-card" onclick="openModule('baum')">
+    <div class="module-icon" style="background:rgba(52,211,153,.12)"><svg width="26" height="26" style="color:#34d399"><use href="#i-tree"/></svg></div>
+    <div><h2>Baumsichtprüfung</h2><p>Auffälligkeiten &amp; Maßnahmen</p><span class="badge" id="badge-baum">0 Einträge</span></div>
+    <svg class="module-arrow" width="18" height="18"><use href="#i-chevron"/></svg>
+  </div>
+  <div class="module-card" onclick="openModule('rueck')">
+    <div class="module-icon" style="background:rgba(251,191,36,.12)"><svg width="26" height="26" style="color:#fbbf24"><use href="#i-drop"/></svg></div>
+    <div><h2>Rückspüler &amp; Frischwasser</h2><p>Prüfung der Leitungen</p><span class="badge" id="badge-rueck">0 Einträge</span></div>
+    <svg class="module-arrow" width="18" height="18"><use href="#i-chevron"/></svg>
+  </div>
+  <div class="module-card" onclick="openModule('settings')" style="border-color:transparent;background:var(--surface2)">
+    <div class="module-icon" style="background:rgba(100,116,139,.15)"><svg width="26" height="26" style="color:#94a3b8"><use href="#i-settings"/></svg></div>
+    <div><h2 style="color:var(--txt2)">Einstellungen</h2><p id="settings-name-preview">Name noch nicht hinterlegt</p></div>
+    <svg class="module-arrow" width="18" height="18" style="color:var(--txt2)"><use href="#i-chevron"/></svg>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div id="screen-settings" class="screen">
+  <div class="content">
+    <div class="card">
+      <div class="card-title"><svg width="14" height="14"><use href="#i-user"/></svg> Hausmeister</div>
+      <label class="field-label">Vor- und Nachname</label>
+      <input type="text" id="settings-name" placeholder="z.B. Max Mustermann" maxlength="60" style="margin-bottom:12px">
+      <button class="btn btn-pri" onclick="saveSettings()" style="display:flex;align-items:center;justify-content:center;gap:9px">
+        <svg width="17" height="17"><use href="#i-save"/></svg> Speichern
+      </button>
+    </div>
+    <p style="font-size:12px;color:var(--txt2);text-align:center;margin-top:4px">Der Name erscheint auf allen PDF-Exporten und E-Mails.</p>
+    <div class="spacer"></div>
+  </div>
+</div>
+
+<!-- STREUBUCH -->
+<div id="screen-sb" class="screen">
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('sb','eingabe')"><svg width="15" height="15"><use href="#i-plus"/></svg> Neue Eingabe</div>
+    <div class="tab" onclick="showTab('sb','uebersicht')"><svg width="15" height="15"><use href="#i-list"/></svg> Übersicht</div>
+  </div>
+  <div id="sb-eingabe" class="content">
+    <div class="card">
+      <div class="card-title"><svg width="14" height="14"><use href="#i-calendar"/></svg> Datum</div>
+      <input type="date" id="sb-datum">
+    </div>
+    <div class="card">
+      <div class="card-title"><svg width="14" height="14"><use href="#i-tool"/></svg> Art der Tätigkeit</div>
+      <div class="chk-group" id="taet">
+        <div class="chk-item" onclick="tog(this)"><input type="checkbox" value="Laub räumen" style="display:none"><div class="chk-box"><svg class="chk-check" width="17" height="17" style="color:#0f1117"><use href="#i-check"/></svg></div><svg class="chk-ico" width="27" height="27"><use href="#i-leaf"/></svg><span class="chk-lbl">Laub räumen</span></div>
+        <div class="chk-item" onclick="tog(this)"><input type="checkbox" value="Schnee räumen" style="display:none"><div class="chk-box"><svg class="chk-check" width="17" height="17" style="color:#0f1117"><use href="#i-check"/></svg></div><svg class="chk-ico" width="27" height="27"><use href="#i-snow"/></svg><span class="chk-lbl">Schnee räumen</span></div>
+        <div class="chk-item" onclick="tog(this)"><input type="checkbox" value="Streuen" style="display:none"><div class="chk-box"><svg class="chk-check" width="17" height="17" style="color:#0f1117"><use href="#i-check"/></svg></div><svg class="chk-ico" width="27" height="27"><use href="#i-salt"/></svg><span class="chk-lbl">Streuen</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><svg width="14" height="14"><use href="#i-pin"/></svg> Einsatzort</div>
+      <div class="chk-group" id="orte"></div>
+      <div class="divider"></div>
+      <div style="display:flex;gap:9px;align-items:center">
+        <input type="text" id="neuer-ort" placeholder="Neuer Einsatzort …" maxlength="40" style="flex:1">
+        <button onclick="addOrt()" style="padding:13px 16px;background:var(--pri);color:#0f1117;border:none;border-radius:10px;font-size:22px;font-weight:700;cursor:pointer;flex-shrink:0">+</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><svg width="14" height="14"><use href="#i-clock"/></svg> Zeitraum</div>
+      <div class="time-row">
+        <div><label class="field-label">Startzeit</label><input type="time" id="sb-start" onchange="onStartChange()"></div>
+        <div><label class="field-label">Endzeit</label><input type="time" id="sb-ende" onchange="onEndeChange()"></div>
+      </div>
+      <div id="sb-dauer" style="font-size:13px;color:var(--ok);font-weight:600;margin-top:10px;min-height:18px"></div>
+    </div>
+    <button class="btn btn-pri" onclick="sbSave()" style="display:flex;align-items:center;justify-content:center;gap:9px"><svg width="18" height="18"><use href="#i-save"/></svg> Eintrag speichern</button>
+    <div class="spacer"></div>
+  </div>
+  <div id="sb-uebersicht" class="content" style="display:none">
+    <div class="stat-row" id="sb-stats"></div>
+    <div class="filter-row">
+      <select id="sb-f-monat" onchange="sbRenderList()"><option value="">Alle Monate</option></select>
+      <select id="sb-f-ort" onchange="sbRenderList()"><option value="">Alle Orte</option></select>
+    </div>
+    <div class="export-row">
+      <button class="btn btn-sec" onclick="openZeitraum('sb-pdf')" style="display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16"><use href="#i-pdf"/></svg> PDF</button>
+      <button class="btn btn-sec" onclick="openZeitraum('sb-mail')" style="display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16"><use href="#i-mail"/></svg> E-Mail</button>
+    </div>
+    <div id="sb-list"></div>
+  </div>
+</div>
+
+<!-- BAUMSICHTPRÜFUNG -->
+<div id="screen-baum" class="screen">
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('baum','eingabe')"><svg width="15" height="15"><use href="#i-plus"/></svg> Neue Prüfung</div>
+    <div class="tab" onclick="showTab('baum','uebersicht')"><svg width="15" height="15"><use href="#i-list"/></svg> Übersicht</div>
+  </div>
+  <div id="baum-eingabe" class="content">
+    <div class="card">
+      <div class="card-title"><svg width="14" height="14"><use href="#i-calendar"/></svg> Datum &amp; Uhrzeit</div>
+      <div class="time-row">
+        <div><label class="field-label">Datum</label><input type="date" id="baum-datum"></div>
+        <div><label class="field-label">Uhrzeit</label><input type="time" id="baum-zeit"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><svg width="14" height="14"><use href="#i-alert"/></svg> Befund</div>
+      <div class="radio-group" id="baum-befund-group">
+        <div class="radio-item on" onclick="baumSetBefund('ok',this,'baum-')"><div class="radio-dot"><div class="radio-inner"></div></div><span class="radio-lbl">Keine Auffälligkeiten</span></div>
+        <div class="radio-item" onclick="baumSetBefund('auff',this,'baum-')"><div class="radio-dot"><div class="radio-inner"></div></div><span class="radio-lbl">Auffälligkeiten festgestellt</span></div>
+      </div>
+      <div id="baum-auff-box" style="display:none;margin-top:12px">
+        <div class="fg"><label class="field-label">Beschreibung</label><textarea id="baum-auff-text" placeholder="Bitte Auffälligkeiten beschreiben …"></textarea></div>
+        <label class="field-label">Ergriffene Maßnahmen</label>
+        <div class="radio-group" id="baum-mass-group">
+          <div class="radio-item on" onclick="radioSelect('baum-mass-group',this)"><div class="radio-dot"><div class="radio-inner"></div></div><span class="radio-lbl">Selber behoben</span></div>
+          <div class="radio-item" onclick="radioSelect('baum-mass-group',this)"><div class="radio-dot"><div class="radio-inner"></div></div><span class="radio-lbl">Weitergeleitet an Bauhof</span></div>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-pri" onclick="baumSave()" style="display:flex;align-items:center;justify-content:center;gap:9px"><svg width="18" height="18"><use href="#i-save"/></svg> Prüfung speichern</button>
+    <div class="spacer"></div>
+  </div>
+  <div id="baum-uebersicht" class="content" style="display:none">
+    <div class="stat-row" id="baum-stats"></div>
+    <div class="filter-row">
+      <select id="baum-f-monat" onchange="baumRenderList()"><option value="">Alle Monate</option></select>
+      <select id="baum-f-befund" onchange="baumRenderList()"><option value="">Alle Befunde</option><option value="ok">Keine Auffälligkeiten</option><option value="auff">Auffälligkeiten</option></select>
+    </div>
+    <div class="export-row">
+      <button class="btn btn-sec" onclick="openZeitraum('baum-pdf')" style="display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16"><use href="#i-pdf"/></svg> PDF</button>
+      <button class="btn btn-sec" onclick="openZeitraum('baum-mail')" style="display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16"><use href="#i-mail"/></svg> E-Mail</button>
+    </div>
+    <div id="baum-list"></div>
+  </div>
+</div>
+
+<!-- RÜCKSPÜLER -->
+<div id="screen-rueck" class="screen">
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('rueck','eingabe')"><svg width="15" height="15"><use href="#i-plus"/></svg> Neue Prüfung</div>
+    <div class="tab" onclick="showTab('rueck','uebersicht')"><svg width="15" height="15"><use href="#i-list"/></svg> Übersicht</div>
+  </div>
+  <div id="rueck-eingabe" class="content">
+    <div class="card">
+      <div class="card-title"><svg width="14" height="14"><use href="#i-calendar"/></svg> Datum &amp; Uhrzeit</div>
+      <div class="time-row">
+        <div><label class="field-label">Datum</label><input type="date" id="rueck-datum"></div>
+        <div><label class="field-label">Uhrzeit</label><input type="time" id="rueck-zeit"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><svg width="14" height="14"><use href="#i-drop"/></svg> Prüfstatus</div>
+      <div class="big-toggle" id="rueck-toggle" onclick="toggleRueck()">
+        <div class="big-toggle-box"><svg class="chk-check" width="19" height="19" id="rueck-chk-ico" style="color:#0f1117;display:none"><use href="#i-check"/></svg></div>
+        <span class="big-toggle-lbl" id="rueck-toggle-lbl">Prüfung als erledigt markieren</span>
+      </div>
+    </div>
+    <button class="btn btn-pri" onclick="rueckSave()" style="display:flex;align-items:center;justify-content:center;gap:9px"><svg width="18" height="18"><use href="#i-save"/></svg> Prüfung speichern</button>
+    <div class="spacer"></div>
+  </div>
+  <div id="rueck-uebersicht" class="content" style="display:none">
+    <div class="stat-row" id="rueck-stats"></div>
+    <div class="filter-row">
+      <select id="rueck-f-monat" onchange="rueckRenderList()"><option value="">Alle Monate</option></select>
+      <select id="rueck-f-status" onchange="rueckRenderList()"><option value="">Alle</option><option value="1">Erledigt</option><option value="0">Offen</option></select>
+    </div>
+    <div class="export-row">
+      <button class="btn btn-sec" onclick="openZeitraum('rueck-pdf')" style="display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16"><use href="#i-pdf"/></svg> PDF</button>
+      <button class="btn btn-sec" onclick="openZeitraum('rueck-mail')" style="display:flex;align-items:center;justify-content:center;gap:8px"><svg width="16" height="16"><use href="#i-mail"/></svg> E-Mail</button>
+    </div>
+    <div id="rueck-list"></div>
+  </div>
+</div>
+
+<!-- EDIT MODALS -->
+<div class="overlay" id="sb-modal">
+  <div class="modal">
+    <div class="modal-hdr"><h2>Eintrag bearbeiten</h2><button class="modal-close" onclick="closeModal('sb-modal')">×</button></div>
+    <div class="fg"><label class="field-label">Datum</label><input type="date" id="e-datum"></div>
+    <div class="fg"><label class="field-label">Tätigkeit</label>
+      <div class="chk-group" id="e-taet">
+        <div class="chk-item" onclick="tog(this)"><input type="checkbox" value="Laub räumen" style="display:none"><div class="chk-box"><svg class="chk-check" width="17" height="17" style="color:#0f1117"><use href="#i-check"/></svg></div><svg class="chk-ico" width="27" height="27"><use href="#i-leaf"/></svg><span class="chk-lbl">Laub räumen</span></div>
+        <div class="chk-item" onclick="tog(this)"><input type="checkbox" value="Schnee räumen" style="display:none"><div class="chk-box"><svg class="chk-check" width="17" height="17" style="color:#0f1117"><use href="#i-check"/></svg></div><svg class="chk-ico" width="27" height="27"><use href="#i-snow"/></svg><span class="chk-lbl">Schnee räumen</span></div>
+        <div class="chk-item" onclick="tog(this)"><input type="checkbox" value="Streuen" style="display:none"><div class="chk-box"><svg class="chk-check" width="17" height="17" style="color:#0f1117"><use href="#i-check"/></svg></div><svg class="chk-ico" width="27" height="27"><use href="#i-salt"/></svg><span class="chk-lbl">Streuen</span></div>
+      </div>
+    </div>
+    <div class="fg"><label class="field-label">Ort</label><div class="chk-group" id="e-orte"></div></div>
+    <div class="fg time-row">
+      <div><label class="field-label">Startzeit</label><input type="time" id="e-start"></div>
+      <div><label class="field-label">Endzeit</label><input type="time" id="e-ende"></div>
+    </div>
+    <button class="btn btn-pri" onclick="sbSaveEdit()" style="display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:10px"><svg width="17" height="17"><use href="#i-save"/></svg> Speichern</button>
+    <button class="btn btn-danger" onclick="sbDelCurrent()" style="display:flex;align-items:center;justify-content:center;gap:9px"><svg width="17" height="17"><use href="#i-trash"/></svg> Löschen</button>
+    <div class="spacer"></div>
+  </div>
+</div>
+
+<div class="overlay" id="baum-modal">
+  <div class="modal">
+    <div class="modal-hdr"><h2>Prüfung bearbeiten</h2><button class="modal-close" onclick="closeModal('baum-modal')">×</button></div>
+    <div class="fg time-row">
+      <div><label class="field-label">Datum</label><input type="date" id="be-datum"></div>
+      <div><label class="field-label">Uhrzeit</label><input type="time" id="be-zeit"></div>
+    </div>
+    <div class="fg"><label class="field-label">Befund</label>
+      <div class="radio-group" id="be-befund-group">
+        <div class="radio-item" onclick="baumSetBefund('ok',this,'be-')"><div class="radio-dot"><div class="radio-inner"></div></div><span class="radio-lbl">Keine Auffälligkeiten</span></div>
+        <div class="radio-item" onclick="baumSetBefund('auff',this,'be-')"><div class="radio-dot"><div class="radio-inner"></div></div><span class="radio-lbl">Auffälligkeiten festgestellt</span></div>
+      </div>
+    </div>
+    <div id="be-auff-box" style="display:none">
+      <div class="fg"><label class="field-label">Beschreibung</label><textarea id="be-auff-text"></textarea></div>
+      <label class="field-label">Maßnahmen</label>
+      <div class="radio-group" id="be-mass-group" style="margin-bottom:14px">
+        <div class="radio-item" onclick="radioSelect('be-mass-group',this)"><div class="radio-dot"><div class="radio-inner"></div></div><span class="radio-lbl">Selber behoben</span></div>
+        <div class="radio-item" onclick="radioSelect('be-mass-group',this)"><div class="radio-dot"><div class="radio-inner"></div></div><span class="radio-lbl">Weitergeleitet an Bauhof</span></div>
+      </div>
+    </div>
+    <button class="btn btn-pri" onclick="baumSaveEdit()" style="display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:10px"><svg width="17" height="17"><use href="#i-save"/></svg> Speichern</button>
+    <button class="btn btn-danger" onclick="baumDelCurrent()" style="display:flex;align-items:center;justify-content:center;gap:9px"><svg width="17" height="17"><use href="#i-trash"/></svg> Löschen</button>
+    <div class="spacer"></div>
+  </div>
+</div>
+
+<div class="overlay" id="rueck-modal">
+  <div class="modal">
+    <div class="modal-hdr"><h2>Prüfung bearbeiten</h2><button class="modal-close" onclick="closeModal('rueck-modal')">×</button></div>
+    <div class="fg time-row">
+      <div><label class="field-label">Datum</label><input type="date" id="re-datum"></div>
+      <div><label class="field-label">Uhrzeit</label><input type="time" id="re-zeit"></div>
+    </div>
+    <div class="fg">
+      <div class="big-toggle" id="re-toggle" onclick="toggleReEdit()">
+        <div class="big-toggle-box"><svg class="chk-check" width="19" height="19" id="re-chk-ico" style="color:#0f1117;display:none"><use href="#i-check"/></svg></div>
+        <span class="big-toggle-lbl">Erledigt</span>
+      </div>
+    </div>
+    <button class="btn btn-pri" onclick="rueckSaveEdit()" style="display:flex;align-items:center;justify-content:center;gap:9px;margin-bottom:10px"><svg width="17" height="17"><use href="#i-save"/></svg> Speichern</button>
+    <button class="btn btn-danger" onclick="rueckDelCurrent()" style="display:flex;align-items:center;justify-content:center;gap:9px"><svg width="17" height="17"><use href="#i-trash"/></svg> Löschen</button>
+    <div class="spacer"></div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-zeitraum">
+  <div class="modal">
+    <div class="modal-hdr"><h2 id="zr-title">Zeitraum wählen</h2><button class="modal-close" onclick="closeModal('modal-zeitraum')">×</button></div>
+    <div class="fg"><label class="field-label">Von</label><input type="month" id="zr-von"></div>
+    <div class="fg"><label class="field-label">Bis</label><input type="month" id="zr-bis"></div>
+    <div class="fg" style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="toggleAlleZr()">
+      <div id="zr-alle-box" class="chk-box" style="width:22px;height:22px;flex-shrink:0"><svg id="zr-alle-chk" width="12" height="12" style="color:#0f1117;display:none"><use href="#i-check"/></svg></div>
+      <span style="font-size:14px;font-weight:500">Alle Einträge exportieren</span>
+    </div>
+    <button class="btn btn-pri" onclick="zeitraumOK()" style="display:flex;align-items:center;justify-content:center;gap:9px;margin-top:4px">
+      <svg width="17" height="17" id="zr-btn-ico"><use href="#i-pdf"/></svg><span id="zr-btn-txt">Erstellen</span>
+    </button>
+    <div class="spacer"></div>
+  </div>
+</div>
+
+<div class="overlay" id="confirm-modal">
+  <div class="modal">
+    <div class="modal-hdr"><h2>Bestätigung</h2></div>
+    <p id="confirm-msg" style="font-size:14px;color:var(--txt2);margin-bottom:18px">Eintrag wirklich löschen?</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <button class="btn btn-sec" onclick="closeModal('confirm-modal')">Abbrechen</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Löschen</button>
+    </div>
+    <div class="spacer"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// PWA
+var mf={name:"Hausmeister Prüflisten",short_name:"Prüflisten",start_url:".",display:"standalone",background_color:"#0f1117",theme_color:"#0f1117"};
+document.getElementById('pwa-manifest').href=URL.createObjectURL(new Blob([JSON.stringify(mf)],{type:'application/json'}));
+
+// Helpers
+function pad(n){return String(n).padStart(2,'0')}
+function fmtDate(d){return d.toISOString().split('T')[0]}
+function fmtTime(d){return pad(d.getHours())+':'+pad(d.getMinutes())}
+function deDate(s){var p=s.split('-');return p[2]+'.'+p[1]+'.'+p[0]}
+function calcMins(s,e){var a=s.split(':').map(Number),b=e.split(':').map(Number),v=(b[0]*60+b[1])-(a[0]*60+a[1]);return v<0?v+1440:v}
+function dauerStr(m){var h=Math.floor(m/60),r=m%60;return(h>0?h+'h ':'')+r+'min'}
+var MONATE=['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+function monatLabel(s){if(!s)return'';var p=s.split('-');return MONATE[parseInt(p[1])-1]+' '+p[0]}
+function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2)}
+function lsGet(k){try{return JSON.parse(localStorage.getItem(k)||'[]')}catch(e){return[]}}
+function lsSave(k,v){localStorage.setItem(k,JSON.stringify(v))}
+
+// Data
+var sbData=lsGet('sb-data'),baumData=lsGet('baum-data'),rueckData=lsGet('rueck-data');
+var hausmeisterName=localStorage.getItem('hm-name')||'';
+
+// Toast
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},2600)}
+
+// Confirm
+var confirmCb=null;
+function showConfirm(msg,cb){confirmCb=cb;document.getElementById('confirm-msg').textContent=msg;document.getElementById('confirm-modal').classList.add('open')}
+document.getElementById('confirm-ok-btn').onclick=function(){closeModal('confirm-modal');if(confirmCb)confirmCb();confirmCb=null};
+
+// Modal
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+document.querySelectorAll('.overlay').forEach(function(o){o.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open')})});
+
+// Checkbox / Radio
+function tog(el){el.classList.toggle('on');el.querySelector('input').checked=el.classList.contains('on')}
+function getChk(id){return Array.from(document.querySelectorAll('#'+id+' input:checked')).map(function(cb){return cb.value})}
+function setChk(id,vals){document.querySelectorAll('#'+id+' .chk-item').forEach(function(el){var v=el.querySelector('input').value,on=vals.indexOf(v)>=0;el.classList.toggle('on',on);el.querySelector('input').checked=on})}
+function radioSelect(grpId,el){document.querySelectorAll('#'+grpId+' .radio-item').forEach(function(r){r.classList.remove('on')});el.classList.add('on')}
+function getRadio(grpId){var on=document.querySelector('#'+grpId+' .radio-item.on');return on?on.querySelector('.radio-lbl').textContent:''}
+
+
+
+// Navigation
+var MODULE_META={
+  home:{title:'Hausmeister Prüflisten',sub:'Übersicht aller Module',ico:'#i-home',color:'#818cf8'},
+  sb:{title:'Räum- & Streubuch',sub:'Winterdienst-Dokumentation',ico:'#i-snow',color:'#818cf8'},
+  baum:{title:'Baumsichtprüfung',sub:'Auffälligkeiten & Maßnahmen',ico:'#i-tree',color:'#34d399'},
+  rueck:{title:'Rückspüler & Frischwasser',sub:'Prüfung der Leitungen',ico:'#i-drop',color:'#fbbf24'},
+  settings:{title:'Einstellungen',sub:'Name & Profil',ico:'#i-settings',color:'#94a3b8'}
+};
+function openModule(mod){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});
+  document.getElementById('screen-'+mod).classList.add('active');
+  var m=MODULE_META[mod];
+  document.getElementById('hdr-title').textContent=m.title;
+  document.getElementById('hdr-sub').textContent=m.sub;
+  document.getElementById('hdr-logo').innerHTML='<svg width="20" height="20" style="color:'+m.color+'"><use href="'+m.ico+'"/></svg>';
+  document.getElementById('hdr-back').classList.add('show');
+  if(mod==='sb')showTab('sb','eingabe');
+  if(mod==='baum')showTab('baum','eingabe');
+  if(mod==='rueck')showTab('rueck','eingabe');
+  if(mod==='settings')document.getElementById('settings-name').value=hausmeisterName;
+}
+function goHome(){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});
+  document.getElementById('screen-home').classList.add('active');
+  document.getElementById('hdr-title').textContent='Hausmeister Prüflisten';
+  document.getElementById('hdr-sub').textContent='Übersicht aller Module';
+  document.getElementById('hdr-logo').innerHTML='<svg width="20" height="20" style="color:#818cf8"><use href="#i-home"/></svg>';
+  document.getElementById('hdr-back').classList.remove('show');
+  updateBadges();
+}
+function showTab(mod,tab){
+  ['eingabe','uebersicht'].forEach(function(s){var el=document.getElementById(mod+'-'+s);if(el)el.style.display=s===tab?'block':'none'});
+  document.querySelectorAll('#screen-'+mod+' .tab').forEach(function(el,i){el.classList.toggle('active',(tab==='eingabe'&&i===0)||(tab==='uebersicht'&&i===1))});
+  if(tab==='uebersicht'){
+    if(mod==='sb'){sbFillFilter();sbRenderList()}
+    if(mod==='baum'){baumFillFilter();baumRenderList()}
+    if(mod==='rueck'){rueckFillFilter();rueckRenderList()}
+  }
+}
+function updateBadges(){
+  document.getElementById('badge-sb').textContent=sbData.length+' Einträge';
+  document.getElementById('badge-baum').textContent=baumData.length+' Einträge';
+  document.getElementById('badge-rueck').textContent=rueckData.length+' Einträge';
+}
+
+// Settings
+function updateNamePreview(){
+  document.getElementById('settings-name-preview').textContent=hausmeisterName||'Name noch nicht hinterlegt';
+}
+function saveSettings(){
+  var val=document.getElementById('settings-name').value.trim();
+  if(!val){toast('Bitte einen Namen eingeben');return}
+  hausmeisterName=val;localStorage.setItem('hm-name',hausmeisterName);
+  toast('Name gespeichert');updateNamePreview();goHome();
+}
+updateNamePreview();
+if(!hausmeisterName){setTimeout(function(){openModule('settings');toast('Bitte zuerst deinen Namen hinterlegen')},400)}
+
+// ── STREUBUCH ─────────────────────────────────────────
+var sbEditId=null;
+(function(){
+  var now=new Date();
+  document.getElementById('sb-datum').value=fmtDate(now);
+  document.getElementById('sb-start').value=fmtTime(new Date(now-3600000));
+  document.getElementById('sb-ende').value=fmtTime(now);
+  calcDauer();
+})();
+
+var DEFAULT_ORTE=[{name:'Wege um Rathaus',ico:'#i-building'},{name:'Marktplatz',ico:'#i-shop'},{name:'Museum',ico:'#i-museum'},{name:'Grundschule',ico:'#i-school'}];
+var customOrte=[];
+var storedOrte=localStorage.getItem('sb-orte');
+if(storedOrte!==null){try{customOrte=JSON.parse(storedOrte)}catch(e){}}
+else{customOrte=DEFAULT_ORTE.map(function(o){return o.name});lsSave('sb-orte',customOrte)}
+DEFAULT_ORTE.forEach(function(o){if(customOrte.indexOf(o.name)<0)customOrte.unshift(o.name)});
+lsSave('sb-orte',customOrte);
+customOrte.forEach(function(o){appendOrtItem(o)});
+
+function ortIco(name){var map={};DEFAULT_ORTE.forEach(function(o){map[o.name]=o.ico});return map[name]||'#i-pin'}
+function appendOrtItem(name){
+  var ico=ortIco(name);
+  function mkItem(cid){
+    var div=document.createElement('div');div.className='chk-item';div.setAttribute('onclick','tog(this)');
+    div.innerHTML='<input type="checkbox" value="'+name+'" style="display:none">'
+      +'<div class="chk-box"><svg class="chk-check" width="17" height="17" style="color:#0f1117"><use href="'+ico+'"/></svg></div>'
+      +'<svg class="chk-ico" width="27" height="27"><use href="'+ico+'"/></svg>'
+      +'<span class="chk-lbl">'+name+'</span>'
+      +'<button onclick="event.stopPropagation();removeOrt(\''+name+'\',this.closest(\'.chk-item\'))" style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--txt2);padding:4px;font-size:20px;flex-shrink:0;line-height:1">×</button>';
+    document.getElementById(cid).appendChild(div);
+  }
+  mkItem('orte');
+  if(!document.querySelector('#e-orte input[value="'+name+'"]'))mkItem('e-orte');
+  var sel=document.getElementById('sb-f-ort');
+  if(sel){var ex=false;for(var i=0;i<sel.options.length;i++){if(sel.options[i].value===name){ex=true;break}}if(!ex){var opt=document.createElement('option');opt.value=name;opt.textContent=name;sel.appendChild(opt)}}
+}
+function addOrt(){
+  var inp=document.getElementById('neuer-ort'),name=inp.value.trim();
+  if(!name){toast('Bitte einen Namen eingeben');return}
+  var ex=false;document.querySelectorAll('#orte input').forEach(function(i){if(i.value===name)ex=true});
+  if(ex){toast('Dieser Ort existiert bereits');return}
+  customOrte.push(name);lsSave('sb-orte',customOrte);appendOrtItem(name);inp.value='';toast('Einsatzort hinzugefügt');
+}
+function removeOrt(name,el){
+  showConfirm('"'+name+'" wirklich löschen?',function(){
+    customOrte=customOrte.filter(function(o){return o!==name});lsSave('sb-orte',customOrte);
+    el.remove();
+    var e2=document.querySelector('#e-orte input[value="'+name+'"]');if(e2)e2.closest('.chk-item').remove();
+    var op=document.querySelector('#sb-f-ort option[value="'+name+'"]');if(op)op.remove();
+    toast('Einsatzort gelöscht');
+  });
+}
+document.getElementById('neuer-ort').addEventListener('keydown',function(e){if(e.key==='Enter')addOrt()});
+
+function calcDauer(){
+  var s=document.getElementById('sb-start').value,e=document.getElementById('sb-ende').value,el=document.getElementById('sb-dauer');
+  el.textContent=s&&e?'Dauer: '+dauerStr(calcMins(s,e)):'';
+}
+function addHour(t,h){var p=t.split(':').map(Number),total=p[0]*60+p[1]+h*60;total=((total%1440)+1440)%1440;return pad(Math.floor(total/60))+':'+pad(total%60)}
+function onStartChange(){var s=document.getElementById('sb-start').value;if(s)document.getElementById('sb-ende').value=addHour(s,1);calcDauer()}
+function onEndeChange(){var e=document.getElementById('sb-ende').value;if(e)document.getElementById('sb-start').value=addHour(e,-1);calcDauer()}
+
+function sbSave(){
+  var datum=document.getElementById('sb-datum').value,taet=getChk('taet'),orte=getChk('orte');
+  var s=document.getElementById('sb-start').value,e=document.getElementById('sb-ende').value;
+  if(!datum||!taet.length||!orte.length){toast('Bitte alle Felder ausfüllen');return}
+  sbData.unshift({id:genId(),datum:datum,taet:taet,orte:orte,s:s,e:e});
+  lsSave('sb-data',sbData);toast('Eintrag gespeichert');
+  var now=new Date();document.getElementById('sb-datum').value=fmtDate(now);
+  document.getElementById('sb-start').value=fmtTime(new Date(now-3600000));
+  document.getElementById('sb-ende').value=fmtTime(now);
+  document.querySelectorAll('#taet .chk-item,#orte .chk-item').forEach(function(el){el.classList.remove('on');el.querySelector('input').checked=false});
+  calcDauer();updateBadges();
+}
+function sbFillFilter(){
+  var months=[];sbData.forEach(function(e){var m=e.datum.slice(0,7);if(months.indexOf(m)<0)months.push(m)});months.sort().reverse();
+  var sel=document.getElementById('sb-f-monat'),cur=sel.value;
+  sel.innerHTML='<option value="">Alle Monate</option>';
+  months.forEach(function(m){var o=document.createElement('option');o.value=m;o.textContent=monatLabel(m);if(m===cur)o.selected=true;sel.appendChild(o)});
+}
+function sbRenderList(){
+  var mf=document.getElementById('sb-f-monat').value,of=document.getElementById('sb-f-ort').value;
+  var fil=sbData.filter(function(e){return(!mf||e.datum.indexOf(mf)===0)&&(!of||e.orte.indexOf(of)>=0)});
+  fil.sort(function(a,b){return(b.datum+b.s).localeCompare(a.datum+a.s)});
+  var tot=fil.reduce(function(a,e){return a+calcMins(e.s,e.e)},0);
+  var orteU=[];fil.forEach(function(e){e.orte.forEach(function(o){if(orteU.indexOf(o)<0)orteU.push(o)})});
+  document.getElementById('sb-stats').innerHTML='<div class="stat"><div class="stat-n">'+fil.length+'</div><div class="stat-l">Einträge</div></div><div class="stat"><div class="stat-n">'+dauerStr(tot)+'</div><div class="stat-l">Gesamt</div></div><div class="stat"><div class="stat-n">'+orteU.length+'</div><div class="stat-l">Orte</div></div>';
+  var list=document.getElementById('sb-list');
+  if(!fil.length){list.innerHTML='<div class="empty"><div class="empty-ico"><svg width="48" height="48"><use href="#i-list"/></svg></div><p>Keine Einträge vorhanden</p></div>';return}
+  var html='';
+  fil.forEach(function(e){html+='<div class="entry-card pri"><div class="e-date">'+deDate(e.datum)+'</div><div class="e-title">'+e.taet.join(' · ')+'</div><div class="e-sub">'+e.orte.join(' · ')+'</div><div class="e-time">'+e.s+' – '+e.e+' Uhr ('+dauerStr(calcMins(e.s,e.e))+')</div><div class="e-actions"><button class="btn-sm btn-edit" onclick="sbOpenEdit(\''+e.id+'\')"><svg width="12" height="12"><use href="#i-edit"/></svg> Bearbeiten</button><button class="btn-sm btn-del" onclick="sbConfirmDel(\''+e.id+'\')"><svg width="12" height="12"><use href="#i-trash"/></svg> Löschen</button></div></div>'});
+  list.innerHTML=html;
+}
+function sbOpenEdit(id){
+  sbEditId=id;var e=null;for(var i=0;i<sbData.length;i++){if(sbData[i].id===id){e=sbData[i];break}}if(!e)return;
+  document.getElementById('e-datum').value=e.datum;  document.getElementById('e-start').value=e.s;document.getElementById('e-ende').value=e.e;
+  setChk('e-taet',e.taet);setChk('e-orte',e.orte);document.getElementById('sb-modal').classList.add('open');
+}
+function sbSaveEdit(){
+  if(!sbEditId)return;var idx=-1;for(var i=0;i<sbData.length;i++){if(sbData[i].id===sbEditId){idx=i;break}}if(idx<0)return;
+  var taet=getChk('e-taet'),orte=getChk('e-orte');if(!taet.length||!orte.length){toast('Felder ausfüllen');return}
+  sbData[idx].datum=document.getElementById('e-datum').value;  sbData[idx].s=document.getElementById('e-start').value;sbData[idx].e=document.getElementById('e-ende').value;sbData[idx].taet=taet;sbData[idx].orte=orte;
+  lsSave('sb-data',sbData);closeModal('sb-modal');sbFillFilter();sbRenderList();toast('Aktualisiert');
+}
+function sbConfirmDel(id){showConfirm('Eintrag wirklich löschen?',function(){sbData=sbData.filter(function(x){return x.id!==id});lsSave('sb-data',sbData);sbFillFilter();sbRenderList();updateBadges();toast('Gelöscht')})}
+function sbDelCurrent(){sbConfirmDel(sbEditId);closeModal('sb-modal')}
+
+// ── BAUMSICHTPRÜFUNG ──────────────────────────────────
+var baumEditId=null;
+(function(){var now=new Date();document.getElementById('baum-datum').value=fmtDate(now);document.getElementById('baum-zeit').value=fmtTime(now)})();
+
+function baumSetBefund(val,el,pfx){
+  document.querySelectorAll('#'+pfx+'befund-group .radio-item').forEach(function(r){r.classList.remove('on')});
+  el.classList.add('on');
+  var box=document.getElementById(pfx+'auff-box');if(box)box.style.display=val==='auff'?'block':'none';
+}
+function baumGetBefund(pfx){return document.querySelectorAll('#'+pfx+'befund-group .radio-item')[0].classList.contains('on')?'ok':'auff'}
+
+function baumSave(){
+  var datum=document.getElementById('baum-datum').value,zeit=document.getElementById('baum-zeit').value;
+  if(!datum){toast('Bitte Datum angeben');return}
+  var befund=baumGetBefund('baum-'),auff='',massnahme='';
+  if(befund==='auff'){auff=document.getElementById('baum-auff-text').value.trim();if(!auff){toast('Bitte Auffälligkeiten beschreiben');return}massnahme=getRadio('baum-mass-group')}
+  baumData.unshift({id:genId(),datum:datum,zeit:zeit,befund:befund,auff:auff,massnahme:massnahme});
+  lsSave('baum-data',baumData);toast('Prüfung gespeichert');
+  var now=new Date();document.getElementById('baum-datum').value=fmtDate(now);document.getElementById('baum-zeit').value=fmtTime(now);
+  document.getElementById('baum-auff-text').value='';document.getElementById('baum-auff-box').style.display='none';
+  document.querySelectorAll('#baum-befund-group .radio-item').forEach(function(r,i){r.classList.toggle('on',i===0)});
+  document.querySelectorAll('#baum-mass-group .radio-item').forEach(function(r,i){r.classList.toggle('on',i===0)});
+  updateBadges();
+}
+function baumFillFilter(){
+  var months=[];baumData.forEach(function(e){var m=e.datum.slice(0,7);if(months.indexOf(m)<0)months.push(m)});months.sort().reverse();
+  var sel=document.getElementById('baum-f-monat'),cur=sel.value;
+  sel.innerHTML='<option value="">Alle Monate</option>';
+  months.forEach(function(m){var o=document.createElement('option');o.value=m;o.textContent=monatLabel(m);if(m===cur)o.selected=true;sel.appendChild(o)});
+}
+function baumRenderList(){
+  var mf=document.getElementById('baum-f-monat').value,bf=document.getElementById('baum-f-befund').value;
+  var fil=baumData.filter(function(e){return(!mf||e.datum.indexOf(mf)===0)&&(!bf||e.befund===bf)});
+  fil.sort(function(a,b){return(b.datum+b.zeit).localeCompare(a.datum+a.zeit)});
+  var okC=fil.filter(function(e){return e.befund==='ok'}).length;
+  document.getElementById('baum-stats').innerHTML='<div class="stat"><div class="stat-n">'+fil.length+'</div><div class="stat-l">Prüfungen</div></div><div class="stat"><div class="stat-n" style="color:var(--ok)">'+okC+'</div><div class="stat-l">Unauffällig</div></div><div class="stat"><div class="stat-n" style="color:var(--warn)">'+(fil.length-okC)+'</div><div class="stat-l">Auffällig</div></div>';
+  var list=document.getElementById('baum-list');
+  if(!fil.length){list.innerHTML='<div class="empty"><div class="empty-ico"><svg width="48" height="48"><use href="#i-tree"/></svg></div><p>Keine Einträge vorhanden</p></div>';return}
+  var html='';
+  fil.forEach(function(e){html+='<div class="entry-card '+(e.befund==='ok'?'ok':'warn')+'"><div class="e-date">'+deDate(e.datum)+' – '+e.zeit+' Uhr</div><span class="pill '+(e.befund==='ok'?'pill-ok':'pill-warn')+'">'+(e.befund==='ok'?'Keine Auffälligkeiten':'Auffälligkeiten')+'</span>'+(e.befund==='auff'?'<div class="e-title" style="margin-top:7px">'+e.auff+'</div><div class="e-sub">→ '+e.massnahme+'</div>':'')+'<div class="e-actions"><button class="btn-sm btn-edit" onclick="baumOpenEdit(\''+e.id+'\')"><svg width="12" height="12"><use href="#i-edit"/></svg> Bearbeiten</button><button class="btn-sm btn-del" onclick="baumConfirmDel(\''+e.id+'\')"><svg width="12" height="12"><use href="#i-trash"/></svg> Löschen</button></div></div>'});
+  list.innerHTML=html;
+}
+function baumOpenEdit(id){
+  baumEditId=id;var e=null;for(var i=0;i<baumData.length;i++){if(baumData[i].id===id){e=baumData[i];break}}if(!e)return;
+  document.getElementById('be-datum').value=e.datum;document.getElementById('be-zeit').value=e.zeit;
+  document.querySelectorAll('#be-befund-group .radio-item').forEach(function(r,i){r.classList.toggle('on',(e.befund==='ok'&&i===0)||(e.befund==='auff'&&i===1))});
+  var box=document.getElementById('be-auff-box');box.style.display=e.befund==='auff'?'block':'none';
+  if(e.befund==='auff'){document.getElementById('be-auff-text').value=e.auff;document.querySelectorAll('#be-mass-group .radio-item').forEach(function(r){r.classList.toggle('on',r.querySelector('.radio-lbl').textContent===e.massnahme)})}
+  document.getElementById('baum-modal').classList.add('open');
+}
+function baumSaveEdit(){
+  if(!baumEditId)return;var idx=-1;for(var i=0;i<baumData.length;i++){if(baumData[i].id===baumEditId){idx=i;break}}if(idx<0)return;
+  var befund=baumGetBefund('be-'),auff='',massnahme='';
+  if(befund==='auff'){auff=document.getElementById('be-auff-text').value.trim();if(!auff){toast('Auffälligkeiten beschreiben');return}massnahme=getRadio('be-mass-group')}
+  baumData[idx].datum=document.getElementById('be-datum').value;baumData[idx].zeit=document.getElementById('be-zeit').value;baumData[idx].befund=befund;baumData[idx].auff=auff;baumData[idx].massnahme=massnahme;
+  lsSave('baum-data',baumData);closeModal('baum-modal');baumFillFilter();baumRenderList();toast('Aktualisiert');
+}
+function baumConfirmDel(id){showConfirm('Eintrag wirklich löschen?',function(){baumData=baumData.filter(function(x){return x.id!==id});lsSave('baum-data',baumData);baumFillFilter();baumRenderList();updateBadges();toast('Gelöscht')})}
+function baumDelCurrent(){baumConfirmDel(baumEditId);closeModal('baum-modal')}
+
+// ── RÜCKSPÜLER ────────────────────────────────────────
+var rueckEditId=null,rueckErledigt=false,reErledigt=false;
+(function(){var now=new Date();document.getElementById('rueck-datum').value=fmtDate(now);document.getElementById('rueck-zeit').value=fmtTime(now)})();
+
+function toggleRueck(){rueckErledigt=!rueckErledigt;document.getElementById('rueck-toggle').classList.toggle('on',rueckErledigt);document.getElementById('rueck-chk-ico').style.display=rueckErledigt?'block':'none';document.getElementById('rueck-toggle-lbl').textContent=rueckErledigt?'Erledigt':'Prüfung als erledigt markieren'}
+function toggleReEdit(){reErledigt=!reErledigt;document.getElementById('re-toggle').classList.toggle('on',reErledigt);document.getElementById('re-chk-ico').style.display=reErledigt?'block':'none'}
+
+function rueckSave(){
+  var datum=document.getElementById('rueck-datum').value,zeit=document.getElementById('rueck-zeit').value;
+  if(!datum){toast('Bitte Datum angeben');return}
+  rueckData.unshift({id:genId(),datum:datum,zeit:zeit,erledigt:rueckErledigt});lsSave('rueck-data',rueckData);toast('Prüfung gespeichert');
+  var now=new Date();document.getElementById('rueck-datum').value=fmtDate(now);document.getElementById('rueck-zeit').value=fmtTime(now);
+  rueckErledigt=false;document.getElementById('rueck-toggle').classList.remove('on');document.getElementById('rueck-chk-ico').style.display='none';document.getElementById('rueck-toggle-lbl').textContent='Prüfung als erledigt markieren';
+  updateBadges();
+}
+function rueckFillFilter(){
+  var months=[];rueckData.forEach(function(e){var m=e.datum.slice(0,7);if(months.indexOf(m)<0)months.push(m)});months.sort().reverse();
+  var sel=document.getElementById('rueck-f-monat'),cur=sel.value;
+  sel.innerHTML='<option value="">Alle Monate</option>';
+  months.forEach(function(m){var o=document.createElement('option');o.value=m;o.textContent=monatLabel(m);if(m===cur)o.selected=true;sel.appendChild(o)});
+}
+function rueckRenderList(){
+  var mf=document.getElementById('rueck-f-monat').value,sf=document.getElementById('rueck-f-status').value;
+  var fil=rueckData.filter(function(e){return(!mf||e.datum.indexOf(mf)===0)&&(sf===''||(sf==='1'&&e.erledigt)||(sf==='0'&&!e.erledigt))});
+  fil.sort(function(a,b){return(b.datum+b.zeit).localeCompare(a.datum+a.zeit)});
+  var erlC=fil.filter(function(e){return e.erledigt}).length;
+  document.getElementById('rueck-stats').innerHTML='<div class="stat"><div class="stat-n">'+fil.length+'</div><div class="stat-l">Prüfungen</div></div><div class="stat"><div class="stat-n" style="color:var(--ok)">'+erlC+'</div><div class="stat-l">Erledigt</div></div><div class="stat"><div class="stat-n" style="color:var(--err)">'+(fil.length-erlC)+'</div><div class="stat-l">Offen</div></div>';
+  var list=document.getElementById('rueck-list');
+  if(!fil.length){list.innerHTML='<div class="empty"><div class="empty-ico"><svg width="48" height="48"><use href="#i-drop"/></svg></div><p>Keine Einträge vorhanden</p></div>';return}
+  var html='';
+  fil.forEach(function(e){html+='<div class="entry-card '+(e.erledigt?'ok':'warn')+'"><div class="e-date">'+deDate(e.datum)+' – '+e.zeit+' Uhr</div><span class="pill '+(e.erledigt?'pill-ok':'pill-warn')+'">'+(e.erledigt?'Erledigt':'Offen')+'</span><div class="e-actions"><button class="btn-sm btn-edit" onclick="rueckOpenEdit(\''+e.id+'\')"><svg width="12" height="12"><use href="#i-edit"/></svg> Bearbeiten</button><button class="btn-sm btn-del" onclick="rueckConfirmDel(\''+e.id+'\')"><svg width="12" height="12"><use href="#i-trash"/></svg> Löschen</button></div></div>'});
+  list.innerHTML=html;
+}
+function rueckOpenEdit(id){
+  rueckEditId=id;var e=null;for(var i=0;i<rueckData.length;i++){if(rueckData[i].id===id){e=rueckData[i];break}}if(!e)return;
+  document.getElementById('re-datum').value=e.datum;document.getElementById('re-zeit').value=e.zeit;
+  reErledigt=!!e.erledigt;document.getElementById('re-toggle').classList.toggle('on',reErledigt);document.getElementById('re-chk-ico').style.display=reErledigt?'block':'none';
+  document.getElementById('rueck-modal').classList.add('open');
+}
+function rueckSaveEdit(){
+  if(!rueckEditId)return;var idx=-1;for(var i=0;i<rueckData.length;i++){if(rueckData[i].id===rueckEditId){idx=i;break}}if(idx<0)return;
+  rueckData[idx].datum=document.getElementById('re-datum').value;rueckData[idx].zeit=document.getElementById('re-zeit').value;rueckData[idx].erledigt=reErledigt;
+  lsSave('rueck-data',rueckData);closeModal('rueck-modal');rueckFillFilter();rueckRenderList();toast('Aktualisiert');
+}
+function rueckConfirmDel(id){showConfirm('Eintrag wirklich löschen?',function(){rueckData=rueckData.filter(function(x){return x.id!==id});lsSave('rueck-data',rueckData);rueckFillFilter();rueckRenderList();updateBadges();toast('Gelöscht')})}
+function rueckDelCurrent(){rueckConfirmDel(rueckEditId);closeModal('rueck-modal')}
+
+// ── EXPORT ────────────────────────────────────────────
+var zrAction=null,zrAlle=false;
+function openZeitraum(action){
+  zrAction=action;zrAlle=false;
+  var ym=fmtDate(new Date()).slice(0,7);
+  document.getElementById('zr-von').value=ym;document.getElementById('zr-bis').value=ym;
+  document.getElementById('zr-von').disabled=false;document.getElementById('zr-bis').disabled=false;
+  document.getElementById('zr-alle-box').style.background='';document.getElementById('zr-alle-chk').style.display='none';
+  var isPdf=action.indexOf('-pdf')>=0;
+  document.getElementById('zr-title').textContent=(isPdf?'PDF':'E-Mail')+' – Zeitraum wählen';
+  document.getElementById('zr-btn-ico').innerHTML='<use href="'+(isPdf?'#i-pdf':'#i-mail')+'"/>';
+  document.getElementById('zr-btn-txt').textContent=isPdf?'PDF erstellen':'E-Mail öffnen';
+  document.getElementById('modal-zeitraum').classList.add('open');
+}
+function toggleAlleZr(){
+  zrAlle=!zrAlle;
+  document.getElementById('zr-von').disabled=zrAlle;document.getElementById('zr-bis').disabled=zrAlle;
+  document.getElementById('zr-alle-box').style.background=zrAlle?'var(--pri)':'';
+  document.getElementById('zr-alle-chk').style.display=zrAlle?'block':'none';
+}
+function zeitraumOK(){
+  var von=document.getElementById('zr-von').value,bis=document.getElementById('zr-bis').value;
+  if(!zrAlle&&(!von||!bis)){toast('Bitte Von und Bis auswählen');return}
+  if(!zrAlle&&von>bis){toast('"Von" muss vor "Bis" liegen');return}
+  closeModal('modal-zeitraum');
+  var label=zrAlle?'Alle Einträge':(von===bis?monatLabel(von):monatLabel(von)+' – '+monatLabel(bis));
+  function filt(data){return data.filter(function(e){return zrAlle||(e.datum.slice(0,7)>=von&&e.datum.slice(0,7)<=bis)}).sort(function(a,b){return a.datum.localeCompare(b.datum)})}
+  if(zrAction==='sb-pdf')sbDoPDF(filt(sbData),label);
+  if(zrAction==='sb-mail')sbDoEmail(filt(sbData),label);
+  if(zrAction==='baum-pdf')baumDoPDF(filt(baumData),label);
+  if(zrAction==='baum-mail')baumDoEmail(filt(baumData),label);
+  if(zrAction==='rueck-pdf')rueckDoPDF(filt(rueckData),label);
+  if(zrAction==='rueck-mail')rueckDoEmail(filt(rueckData),label);
+}
+
+function openPrint(html){var w=window.open('','_blank','width=900,height=700');if(w){w.document.write(html);w.document.close()}else toast('Bitte Pop-ups erlauben')}
+var pdfCss='<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Inter,Arial,sans-serif;font-size:11px;color:#1e293b;padding:24px}.hdr{background:#181c27;color:#e8eaf0;padding:16px 20px;border-radius:10px;margin-bottom:18px}.hdr h1{font-size:16px;font-weight:800;margin-bottom:3px}.hdr p{font-size:10px;opacity:.7}.hdr .name{font-size:11px;opacity:.9;margin-top:6px;font-weight:600;border-top:1px solid rgba(255,255,255,.15);padding-top:6px}table{width:100%;border-collapse:collapse;margin-bottom:14px}th{background:#181c27;color:#818cf8;padding:8px 10px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}td{padding:7px 10px;border-bottom:1px solid #e2e8f0;vertical-align:top}.footer{background:#181c27;color:#e8eaf0;padding:9px 14px;border-radius:8px;display:flex;justify-content:space-between;font-weight:700;font-size:11px}.ok{background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}.warn{background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700}@media print{.hdr,.footer,th{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style>';
+function nameRow(){return hausmeisterName?'<div class="name">Hausmeister: '+hausmeisterName+'</div>':''}
+function nameLine(){return hausmeisterName?'\nHausmeister: '+hausmeisterName:''}
+
+function sbDoPDF(fil,period){
+  var tot=fil.reduce(function(a,e){return a+calcMins(e.s,e.e)},0);
+  var rows=fil.length?fil.map(function(e,i){return'<tr style="background:'+(i%2===0?'#f8fafc':'#fff')+'"><td>'+deDate(e.datum)+'</td><td>'+e.taet.join(', ')+'</td><td>'+e.orte.join(', ')+'</td><td>'+e.s+'–'+e.e+'</td><td>'+dauerStr(calcMins(e.s,e.e))+'</td></tr>'}).join(''):'<tr><td colspan="5" style="text-align:center;padding:20px;color:#64748b">Keine Einträge</td></tr>';
+  openPrint('<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8">'+pdfCss+'<title>Räum- & Streubuch</title></head><body><div class="hdr"><h1>Räum- &amp; Streubuch</h1><p>Zeitraum: '+period+' | Erstellt: '+new Date().toLocaleDateString('de-DE')+'</p>'+nameRow()+'</div><table><thead><tr><th>Datum</th><th>Tätigkeit</th><th>Ort</th><th>Zeit</th><th>Dauer</th></tr></thead><tbody>'+rows+'</tbody></table>'+(fil.length?'<div class="footer"><span>'+fil.length+' Einträge</span><span>Gesamtzeit: '+dauerStr(tot)+'</span></div>':'')+'<scr'+'ipt>window.onload=function(){window.print()}<\/scr'+'ipt></body></html>');
+}
+function sbDoEmail(fil,period){
+  var body='Räum- & Streubuch – '+period+'\nErstellt: '+new Date().toLocaleDateString('de-DE')+nameLine()+'\n'+Array(41).join('─')+'\n\n';
+  fil.forEach(function(e){body+='Datum: '+deDate(e.datum)+'\nTätigkeit: '+e.taet.join(', ')+'\nOrt: '+e.orte.join(', ')+'\nZeit: '+e.s+'–'+e.e+' ('+dauerStr(calcMins(e.s,e.e))+')\n'+Array(31).join('─')+'\n'});
+  if(fil.length){var tot=fil.reduce(function(a,e){return a+calcMins(e.s,e.e)},0);body+='\nGesamt: '+fil.length+' Einträge | '+dauerStr(tot)}
+  window.location.href='mailto:onit.giese@gmail.com?subject='+encodeURIComponent('Räum- & Streubuch – '+period)+'&body='+encodeURIComponent(body);
+}
+function baumDoPDF(fil,period){
+  var rows=fil.length?fil.map(function(e,i){return'<tr style="background:'+(i%2===0?'#f8fafc':'#fff')+'"><td>'+deDate(e.datum)+'</td><td>'+e.zeit+' Uhr</td><td><span class="'+(e.befund==='ok'?'ok':'warn')+'">'+(e.befund==='ok'?'Unauffällig':'Auffällig')+'</span></td><td>'+(e.auff||'–')+'</td><td>'+(e.massnahme||'–')+'</td></tr>'}).join(''):'<tr><td colspan="5" style="text-align:center;padding:20px;color:#64748b">Keine Einträge</td></tr>';
+  openPrint('<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8">'+pdfCss+'<title>Baumsichtprüfung</title></head><body><div class="hdr"><h1>Baumsichtprüfung</h1><p>Zeitraum: '+period+' | Erstellt: '+new Date().toLocaleDateString('de-DE')+'</p>'+nameRow()+'</div><table><thead><tr><th>Datum</th><th>Uhrzeit</th><th>Befund</th><th>Auffälligkeiten</th><th>Maßnahmen</th></tr></thead><tbody>'+rows+'</tbody></table>'+(fil.length?'<div class="footer"><span>'+fil.length+' Prüfungen</span><span>Auffällig: '+fil.filter(function(e){return e.befund==='auff'}).length+'</span></div>':'')+'<scr'+'ipt>window.onload=function(){window.print()}<\/scr'+'ipt></body></html>');
+}
+function baumDoEmail(fil,period){
+  var body='Baumsichtprüfung – '+period+'\nErstellt: '+new Date().toLocaleDateString('de-DE')+nameLine()+'\n'+Array(41).join('─')+'\n\n';
+  fil.forEach(function(e){body+='Datum: '+deDate(e.datum)+', '+e.zeit+' Uhr\nBefund: '+(e.befund==='ok'?'Keine Auffälligkeiten':'Auffälligkeiten')+(e.befund==='auff'?'\nBeschreibung: '+e.auff+'\nMaßnahmen: '+e.massnahme:'')+'\n'+Array(31).join('─')+'\n'});
+  window.location.href='mailto:onit.giese@gmail.com?subject='+encodeURIComponent('Baumsichtprüfung – '+period)+'&body='+encodeURIComponent(body);
+}
+function rueckDoPDF(fil,period){
+  var rows=fil.length?fil.map(function(e,i){return'<tr style="background:'+(i%2===0?'#f8fafc':'#fff')+'"><td>'+deDate(e.datum)+'</td><td>'+e.zeit+' Uhr</td><td><span class="'+(e.erledigt?'ok':'warn')+'">'+(e.erledigt?'Erledigt':'Offen')+'</span></td></tr>'}).join(''):'<tr><td colspan="3" style="text-align:center;padding:20px;color:#64748b">Keine Einträge</td></tr>';
+  openPrint('<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8">'+pdfCss+'<title>Rückspüler</title></head><body><div class="hdr"><h1>Rückspüler &amp; Frischwasserleitung</h1><p>Zeitraum: '+period+' | Erstellt: '+new Date().toLocaleDateString('de-DE')+'</p>'+nameRow()+'</div><table><thead><tr><th>Datum</th><th>Uhrzeit</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table>'+(fil.length?'<div class="footer"><span>'+fil.length+' Prüfungen</span><span>Erledigt: '+fil.filter(function(e){return e.erledigt}).length+'</span></div>':'')+'<scr'+'ipt>window.onload=function(){window.print()}<\/scr'+'ipt></body></html>');
+}
+function rueckDoEmail(fil,period){
+  var body='Rückspüler & Frischwasserleitung – '+period+'\nErstellt: '+new Date().toLocaleDateString('de-DE')+nameLine()+'\n'+Array(41).join('─')+'\n\n';
+  fil.forEach(function(e){body+='Datum: '+deDate(e.datum)+', '+e.zeit+' Uhr\nStatus: '+(e.erledigt?'Erledigt':'Offen')+'\n'+Array(31).join('─')+'\n'});
+  window.location.href='mailto:onit.giese@gmail.com?subject='+encodeURIComponent('Rückspüler & Frischwasser – '+period)+'&body='+encodeURIComponent(body);
+}
+
+updateBadges();
+</script>
+</body>
+</html>
